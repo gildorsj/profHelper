@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// ProfHelper — Gerenciador de turmas para professores
+// PropHelfer — Gerenciador de turmas para professores
 // Ponto de entrada: banco (SQLite) + navegação (React Navigation / stack).
 // ---------------------------------------------------------------------------
 import { Suspense } from 'react';
@@ -50,7 +50,7 @@ export default function App() {
       <StatusBar style="light" />
       <Suspense fallback={<Carregando />}>
         <SQLiteProvider
-          databaseName="profhelper.db"
+          databaseName="prophelfer.db"
           onInit={initDatabase}
           useSuspense
         >
@@ -59,7 +59,7 @@ export default function App() {
               <Stack.Screen
                 name="Home"
                 component={HomeScreen}
-                options={{ title: 'ProfHelper' }}
+                options={{ title: 'PropHelfer' }}
               />
               <Stack.Screen
                 name="Perfil"

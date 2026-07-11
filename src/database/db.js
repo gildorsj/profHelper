@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// Camada de banco de dados (SQLite) do ProfHelper
+// Camada de banco de dados (SQLite) do PropHelfer
 // ---------------------------------------------------------------------------
 // Aqui ficam TODAS as operações de banco. Usamos a API assíncrona do
 // expo-sqlite (SDK 57): runAsync / getAllAsync / getFirstAsync / execAsync.

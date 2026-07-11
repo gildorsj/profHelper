@@ -1,4 +1,4 @@
-// Paleta de cores e constantes visuais do ProfHelper.
+// Paleta de cores e constantes visuais do PropHelfer.
 // Baseada no protótipo do Figma (tema vermelho, texto branco).
 
 export const colors = {
