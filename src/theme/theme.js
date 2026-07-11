@@ -1,38 +1,54 @@
-// Paleta de cores e constantes visuais do ProfHelper.
-// Baseada no protótipo do Figma (tema vermelho, texto branco).
+// Paleta de cores e constantes visuais do PropHelfer.
+// Tema vermelho (identidade do Figma), refinado com profundidade e hierarquia.
 
 export const colors = {
-  // Vermelho principal (fundo das telas)
-  primary: '#C62828',
-  primaryDark: '#8E1B1B', // cabeçalho / barra de status
+  // Vermelho de marca (fundo das telas) + variações de profundidade
+  primary: '#C1272D',
+  primaryDark: '#A81F26', // barra superior (app bar)
+  primaryDeep: '#7E1519', // barra de status / sombras profundas
   primaryLight: '#E14B4B',
 
-  // Superfícies claras (cards de título, modais, inputs de destaque)
+  // Superfícies translúcidas sobre o vermelho (cards do conteúdo)
+  card: 'rgba(255,255,255,0.10)',
+  cardStrong: 'rgba(255,255,255,0.16)',
+  cardBorder: 'rgba(255,255,255,0.16)',
+
+  // Superfícies claras (cartões de título brancos, chips claros)
   surface: '#FFFFFF',
-  surfaceMuted: '#F3F3F3',
+  surfaceMuted: '#F4F4F4',
 
   // Texto sobre o vermelho
   onPrimary: '#FFFFFF',
-  onPrimaryMuted: 'rgba(255,255,255,0.72)',
+  onPrimaryMuted: 'rgba(255,255,255,0.80)',
+  onPrimaryFaint: 'rgba(255,255,255,0.55)',
 
   // Texto sobre superfícies claras
-  onSurface: '#2A2A2A',
-  onSurfaceMuted: '#7A7A7A',
+  onSurface: '#2A1614',
+  onSurfaceMuted: '#8A8A8A',
 
-  // Elementos auxiliares
-  divider: 'rgba(255,255,255,0.22)',
-  badge: '#EBB0A6', // caixinha salmão da frequência (Lista de Alunos)
-  badgeText: '#5A241C',
+  // Divisórias
+  divider: 'rgba(255,255,255,0.14)',
 
-  // Estados
-  success: '#2E7D32',
-  warning: '#F9A825',
-  danger: '#7F1010',
+  // Chip salmão original (mantido por compatibilidade)
+  badge: '#F2C4BC',
+  badgeText: '#7E1519',
 
-  // Inputs sobre o vermelho
-  inputBg: 'rgba(255,255,255,0.12)',
-  inputBorder: 'rgba(255,255,255,0.55)',
-  placeholder: 'rgba(255,255,255,0.6)',
+  // Cores semânticas
+  success: '#2F9E44',
+  warning: '#E8930C',
+  danger: '#E03131',
+  dangerDeep: '#8E1519',
+
+  // Frequência (usadas em texto/ícone sobre chip claro)
+  freqAlta: '#2F9E44', // >= 75%
+  freqMedia: '#E8930C', // 60% a 74%
+  freqBaixa: '#E03131', // < 60%
+
+  // Inputs (fundo levemente escurecido para o texto branco contrastar)
+  inputBg: 'rgba(0,0,0,0.16)',
+  inputBorder: 'rgba(255,255,255,0.28)',
+  inputBorderFocus: '#FFFFFF',
+  placeholder: 'rgba(255,255,255,0.55)',
 };
 
 export const spacing = {
@@ -44,15 +60,56 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 6,
-  md: 12,
+  sm: 8,
+  md: 14,
   lg: 20,
   pill: 999,
 };
 
 export const typography = {
-  title: 24,
-  subtitle: 16,
+  hero: 30,
+  title: 23,
+  subtitle: 17,
   body: 16,
   small: 13,
+  tiny: 11,
 };
+
+// Sombras/elevação reutilizáveis (iOS: shadow*, Android: elevation).
+export const shadow = {
+  sm: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  md: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.22,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  lg: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 10,
+  },
+};
+
+// Cor semântica da frequência (verde = boa, âmbar = atenção, vermelho = crítica).
+export function corFrequencia(pct) {
+  if (pct >= 75) return colors.freqAlta;
+  if (pct >= 60) return colors.freqMedia;
+  return colors.freqBaixa;
+}
+
+// Rótulo curto correspondente à faixa de frequência.
+export function rotuloFrequencia(pct) {
+  if (pct >= 75) return 'Boa';
+  if (pct >= 60) return 'Atenção';
+  return 'Crítica';
+}

@@ -1,5 +1,5 @@
 // ---------------------------------------------------------------------------
-// ProfHelper — Gerenciador de turmas para professores
+// PropHelfer — Gerenciador de turmas para professores
 // Ponto de entrada: banco (SQLite) + navegação (React Navigation / stack).
 // ---------------------------------------------------------------------------
 import { Suspense } from 'react';
@@ -12,6 +12,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { initDatabase } from './src/database/db';
 import { colors } from './src/theme/theme';
+import { ToastProvider } from './src/components/Toast';
 
 import HomeScreen from './src/screens/HomeScreen';
 import PerfilScreen from './src/screens/PerfilScreen';
@@ -31,9 +32,12 @@ const Stack = createNativeStackNavigator();
 const screenOptions = {
   headerStyle: { backgroundColor: colors.primaryDark },
   headerTintColor: colors.onPrimary,
-  headerTitleStyle: { fontWeight: '700' },
+  headerTitleStyle: { fontWeight: '800' },
+  headerTitleAlign: 'center',
   headerShadowVisible: false,
+  headerBackButtonDisplayMode: 'minimal',
   contentStyle: { backgroundColor: colors.primary },
+  animation: 'slide_from_right',
 };
 
 function Carregando() {
@@ -48,9 +52,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <Suspense fallback={<Carregando />}>
+      <ToastProvider>
+        <Suspense fallback={<Carregando />}>
         <SQLiteProvider
-          databaseName="profhelper.db"
+          databaseName="prophelfer.db"
           onInit={initDatabase}
           useSuspense
         >
@@ -59,7 +64,7 @@ export default function App() {
               <Stack.Screen
                 name="Home"
                 component={HomeScreen}
-                options={{ title: 'ProfHelper' }}
+                options={{ title: 'PropHelfer' }}
               />
               <Stack.Screen
                 name="Perfil"
@@ -119,7 +124,8 @@ export default function App() {
             </Stack.Navigator>
           </NavigationContainer>
         </SQLiteProvider>
-      </Suspense>
+        </Suspense>
+      </ToastProvider>
     </SafeAreaProvider>
   );
 }

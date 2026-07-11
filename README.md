@@ -1,4 +1,4 @@
-# ProfHelper 📚
+# PropHelfer 📚
 
 Aplicativo **React Native (Expo)** para **gerenciamento de turmas por professores**.
 Trabalho final da disciplina de Programação de Dispositivos Móveis — UEMG.
@@ -132,7 +132,7 @@ Home
 
 ## 📝 Observações
 
-- O banco `profhelper.db` é criado automaticamente na primeira execução
+- O banco `prophelfer.db` é criado automaticamente na primeira execução
   (função `initDatabase` em `src/database/db.js`).
 - Para começar do zero (sem os dados de exemplo), basta reinstalar o app —
   o banco é local ao aparelho.

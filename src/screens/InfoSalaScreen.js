@@ -6,13 +6,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSQLiteContext } from 'expo-sqlite';
 
 import TitleCard from '../components/TitleCard';
+import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
+import SectionLabel from '../components/SectionLabel';
+import FrequencyBadge from '../components/FrequencyBadge';
+import ProgressBar from '../components/ProgressBar';
 import {
   frequenciaDosAlunos,
   frequenciaGeralSala,
   getSala,
 } from '../database/db';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { colors, corFrequencia, radius, shadow, spacing, typography } from '../theme/theme';
 
 export default function InfoSalaScreen({ route }) {
   const db = useSQLiteContext();
@@ -41,54 +45,82 @@ export default function InfoSalaScreen({ route }) {
     }, [db, salaId])
   );
 
+  const temAulas = geral.totalAulas > 0;
+  const corGeral = temAulas ? corFrequencia(geral.percentual) : colors.onPrimaryFaint;
+
   const cabecalho = (
     <View>
-      <TitleCard title="Informações da sala" subtitle={sala ? sala.nome : ''} />
+      <TitleCard
+        title="Informações da sala"
+        subtitle={sala ? sala.nome : ''}
+        icon="stats-chart-outline"
+      />
 
-      <View style={styles.painel}>
-        {sala && sala.informacoes ? (
-          <Text style={styles.info}>{sala.informacoes}</Text>
-        ) : null}
+      {sala && sala.informacoes ? (
+        <Card style={styles.infoCard}>
+          <Text style={styles.infoText}>{sala.informacoes}</Text>
+        </Card>
+      ) : null}
 
-        <View style={styles.painelLinha}>
-          <View style={styles.painelEsq}>
-            <View style={styles.tag}>
-              <Ionicons
-                name={sala && sala.online ? 'globe-outline' : 'easel-outline'}
-                size={16}
-                color={colors.onSurfaceMuted}
-              />
-              <Text style={styles.tagTexto}>
-                {sala && sala.online ? 'Sala online' : 'Sala presencial'}
-              </Text>
-            </View>
-            <Text style={styles.aulas}>{geral.totalAulas} aula(s) lecionada(s)</Text>
-            <Text style={styles.aulasSub}>{alunos.length} aluno(s)</Text>
+      {/* Painel de frequência geral */}
+      <Card style={styles.hero}>
+        <View style={styles.heroLeft}>
+          <View style={styles.tag}>
+            <Ionicons
+              name={sala && sala.online ? 'globe-outline' : 'easel-outline'}
+              size={14}
+              color={colors.onPrimaryMuted}
+            />
+            <Text style={styles.tagTexto}>
+              {sala && sala.online ? 'Sala online' : 'Sala presencial'}
+            </Text>
           </View>
-
-          {/* Círculo com a frequência geral, como no protótipo */}
-          <View style={styles.circulo}>
-            <Text style={styles.circuloNum}>{geral.percentual}%</Text>
-            <Text style={styles.circuloLabel}>freq. geral</Text>
+          <Text style={styles.aulasNum}>{geral.totalAulas}</Text>
+          <Text style={styles.aulasRot}>aula(s) lecionada(s)</Text>
+          <View style={styles.alunosRow}>
+            <Ionicons name="people-outline" size={13} color={colors.onPrimaryMuted} />
+            <Text style={styles.alunosRot}>{alunos.length} aluno(s)</Text>
           </View>
         </View>
-      </View>
 
-      <View style={styles.cabecalho}>
-        <Text style={styles.cabTitulo}>Alunos</Text>
-        <Text style={styles.cabTitulo}>Frequência (%)</Text>
-      </View>
+        <View style={[styles.ring, { borderColor: corGeral }]}>
+          <Text style={[styles.ringNum, { color: corGeral }]}>
+            {geral.percentual}%
+          </Text>
+          <Text style={styles.ringRot}>{temAulas ? 'freq. geral' : 'sem aulas'}</Text>
+        </View>
+      </Card>
+
+      {alunos.length > 0 ? (
+        <SectionLabel>Frequência por aluno</SectionLabel>
+      ) : null}
     </View>
   );
 
   function renderAluno({ item }) {
+    const alunoTemAulas = item.registros > 0;
     return (
-      <View style={styles.row}>
-        <Ionicons name="person-outline" size={20} color={colors.onPrimary} />
-        <Text style={styles.nome}>{item.nome}</Text>
-        <View style={styles.percentBox}>
-          <Text style={styles.percentTexto}>{item.percentual}%</Text>
+      <View style={styles.card}>
+        <View style={styles.iconChip}>
+          <Ionicons name="person" size={18} color={colors.onPrimary} />
         </View>
+        <View style={styles.info}>
+          <Text style={styles.nome} numberOfLines={1}>
+            {item.nome}
+          </Text>
+          <ProgressBar
+            value={item.percentual}
+            color={alunoTemAulas ? corFrequencia(item.percentual) : colors.onPrimaryFaint}
+            style={styles.barra}
+          />
+        </View>
+        {alunoTemAulas ? (
+          <FrequencyBadge percentual={item.percentual} />
+        ) : (
+          <View style={styles.semChip}>
+            <Text style={styles.semTexto}>—</Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -121,23 +153,20 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     flexGrow: 1,
   },
-  painel: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  info: {
-    color: colors.onSurface,
-    fontSize: typography.small,
+  infoCard: {
     marginBottom: spacing.md,
   },
-  painelLinha: {
+  infoText: {
+    color: colors.onPrimary,
+    fontSize: typography.small,
+    lineHeight: 20,
+  },
+  hero: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: spacing.lg,
   },
-  painelEsq: {
+  heroLeft: {
     flex: 1,
   },
   tag: {
@@ -146,73 +175,90 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   tagTexto: {
-    color: colors.onSurfaceMuted,
+    color: colors.onPrimaryMuted,
     fontSize: typography.small,
-    marginLeft: 4,
+    marginLeft: 5,
   },
-  aulas: {
-    color: colors.onSurface,
-    fontSize: typography.subtitle,
-    fontWeight: '700',
+  aulasNum: {
+    color: colors.onPrimary,
+    fontSize: typography.hero,
+    fontWeight: '800',
   },
-  aulasSub: {
-    color: colors.onSurfaceMuted,
+  aulasRot: {
+    color: colors.onPrimaryMuted,
     fontSize: typography.small,
-    marginTop: 2,
   },
-  circulo: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 4,
-    borderColor: colors.primary,
+  alunosRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  alunosRot: {
+    color: colors.onPrimaryMuted,
+    fontSize: typography.small,
+    marginLeft: 5,
+  },
+  ring: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 6,
+    backgroundColor: 'rgba(0,0,0,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  circuloNum: {
-    color: colors.primary,
-    fontSize: 22,
+  ringNum: {
+    fontSize: typography.title,
     fontWeight: '800',
   },
-  circuloLabel: {
-    color: colors.onSurfaceMuted,
+  ringRot: {
+    color: colors.onPrimaryMuted,
     fontSize: 10,
+    marginTop: 2,
   },
-  cabecalho: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  cabTitulo: {
-    color: colors.onPrimary,
-    fontWeight: '700',
-    fontSize: typography.body,
-  },
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadow.sm,
+  },
+  iconChip: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.cardStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  info: {
+    flex: 1,
+    marginRight: spacing.sm,
   },
   nome: {
-    flex: 1,
     color: colors.onPrimary,
     fontSize: typography.body,
-    marginLeft: spacing.sm,
-  },
-  percentBox: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.sm,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.md,
-    minWidth: 56,
-    alignItems: 'center',
-  },
-  percentTexto: {
-    color: colors.primary,
     fontWeight: '700',
+  },
+  barra: {
+    marginTop: 8,
+  },
+  semChip: {
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardStrong,
+  },
+  semTexto: {
+    color: colors.onPrimaryMuted,
+    fontWeight: '800',
     fontSize: typography.body,
   },
 });
