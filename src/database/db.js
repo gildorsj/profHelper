@@ -264,6 +264,25 @@ export async function removerSala(db, id) {
   await db.runAsync('DELETE FROM salas WHERE id = ?', id);
 }
 
+// Resumo geral para o painel da tela inicial.
+export async function resumoGeral(db) {
+  const salas = await db.getFirstAsync(
+    `SELECT
+        COUNT(*) AS total,
+        COALESCE(SUM(CASE WHEN online = 1 THEN 1 ELSE 0 END), 0) AS online
+     FROM salas`
+  );
+  const alunos = await db.getFirstAsync('SELECT COUNT(*) AS total FROM alunos');
+  const total = salas ? salas.total : 0;
+  const online = salas ? salas.online : 0;
+  return {
+    totalSalas: total,
+    totalSalasOnline: online,
+    totalSalasPresenciais: total - online,
+    totalAlunos: alunos ? alunos.total : 0,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Alunos
 // ---------------------------------------------------------------------------

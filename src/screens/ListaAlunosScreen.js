@@ -1,4 +1,4 @@
-// Lista de alunos com a frequência de cada um (presenças e faltas).
+// Lista de alunos com a frequência de cada um (presenças, faltas e %).
 import { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,10 +7,22 @@ import { useSQLiteContext } from 'expo-sqlite';
 
 import TitleCard from '../components/TitleCard';
 import EmptyState from '../components/EmptyState';
+import PrimaryButton from '../components/PrimaryButton';
+import FrequencyBadge from '../components/FrequencyBadge';
+import ProgressBar from '../components/ProgressBar';
 import { frequenciaDosAlunos, getSala } from '../database/db';
-import { colors, radius, spacing, typography } from '../theme/theme';
+import { colors, corFrequencia, radius, shadow, spacing, typography } from '../theme/theme';
 
-export default function ListaAlunosScreen({ route }) {
+function Legenda({ cor, texto }) {
+  return (
+    <View style={styles.legItem}>
+      <View style={[styles.legDot, { backgroundColor: cor }]} />
+      <Text style={styles.legTexto}>{texto}</Text>
+    </View>
+  );
+}
+
+export default function ListaAlunosScreen({ navigation, route }) {
   const db = useSQLiteContext();
   const { salaId } = route.params;
   const [alunos, setAlunos] = useState([]);
@@ -34,20 +46,34 @@ export default function ListaAlunosScreen({ route }) {
   );
 
   function renderAluno({ item }) {
+    const temAulas = item.registros > 0;
     return (
-      <View style={styles.row}>
-        <Ionicons name="person-outline" size={20} color={colors.onPrimary} />
-        <View style={styles.nomeWrap}>
-          <Text style={styles.nome}>{item.nome}</Text>
-          {item.matricula ? (
-            <Text style={styles.matricula}>Mat. {item.matricula}</Text>
-          ) : null}
+      <View style={styles.card}>
+        <View style={styles.iconChip}>
+          <Ionicons name="person" size={18} color={colors.onPrimary} />
         </View>
-        {/* Caixa de presenças (salmão) + faltas ao lado, como no protótipo */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{item.presencas}</Text>
+        <View style={styles.info}>
+          <Text style={styles.nome} numberOfLines={1}>
+            {item.nome}
+          </Text>
+          <Text style={styles.meta}>
+            {temAulas
+              ? `${item.presencas} presença(s) · ${item.faltas} falta(s)`
+              : 'Sem chamadas registradas'}
+          </Text>
+          <ProgressBar
+            value={item.percentual}
+            color={temAulas ? corFrequencia(item.percentual) : colors.onPrimaryFaint}
+            style={styles.barra}
+          />
         </View>
-        <Text style={styles.faltas}>{item.faltas}</Text>
+        {temAulas ? (
+          <FrequencyBadge percentual={item.percentual} />
+        ) : (
+          <View style={styles.semChip}>
+            <Text style={styles.semTexto}>—</Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -61,24 +87,36 @@ export default function ListaAlunosScreen({ route }) {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View>
-            <TitleCard title="LISTA ALUNOS" subtitle={sala ? sala.nome : ''} />
-            <View style={styles.cabecalho}>
-              <Text style={styles.cabTitulo}>Alunos</Text>
-              <Text style={styles.cabTitulo}>Frequência</Text>
+            <TitleCard
+              title="LISTA DE ALUNOS"
+              subtitle={sala ? sala.nome : ''}
+              icon="people-outline"
+            />
+            <View style={styles.acao}>
+              <PrimaryButton
+                title="Adicionar aluno"
+                icon="person-add"
+                variant="ghost"
+                full
+                onPress={() => navigation.navigate('AdicionarAluno', { salaId })}
+              />
             </View>
-            <View style={styles.legenda}>
-              <View style={styles.legItem}>
-                <View style={styles.badgeMini} />
-                <Text style={styles.legTexto}>presenças</Text>
+            {alunos.length > 0 ? (
+              <View style={styles.legenda}>
+                <Legenda cor={colors.freqAlta} texto="Boa ≥75%" />
+                <Legenda cor={colors.freqMedia} texto="Atenção 60–74%" />
+                <Legenda cor={colors.freqBaixa} texto="Crítica <60%" />
               </View>
-              <Text style={styles.legTexto}>faltas</Text>
-            </View>
+            ) : null}
           </View>
         }
         ListEmptyComponent={
           <EmptyState
             icon="people-outline"
-            message={'Nenhum aluno cadastrado nesta sala.\nUse "Adicionar aluno".'}
+            message="Nenhum aluno cadastrado nesta sala."
+            actionLabel="Adicionar aluno"
+            actionIcon="person-add"
+            onAction={() => navigation.navigate('AdicionarAluno', { salaId })}
           />
         }
       />
@@ -95,77 +133,78 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     flexGrow: 1,
   },
-  cabecalho: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xs,
-    marginBottom: spacing.xs,
-  },
-  cabTitulo: {
-    color: colors.onPrimary,
-    fontWeight: '700',
-    fontSize: typography.body,
+  acao: {
+    marginBottom: spacing.md,
   },
   legenda: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   legItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: spacing.lg,
   },
-  badgeMini: {
-    width: 14,
-    height: 14,
-    borderRadius: radius.sm,
-    backgroundColor: colors.badge,
-    marginRight: spacing.xs,
+  legDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    marginRight: 5,
   },
   legTexto: {
     color: colors.onPrimaryMuted,
-    fontSize: typography.small,
+    fontSize: typography.tiny,
   },
-  row: {
+  card: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    backgroundColor: colors.card,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    ...shadow.sm,
   },
-  nomeWrap: {
+  iconChip: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.cardStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  info: {
     flex: 1,
-    marginLeft: spacing.sm,
+    marginRight: spacing.sm,
   },
   nome: {
     color: colors.onPrimary,
     fontSize: typography.body,
+    fontWeight: '700',
   },
-  matricula: {
+  meta: {
     color: colors.onPrimaryMuted,
     fontSize: typography.small,
+    marginTop: 2,
   },
-  badge: {
-    backgroundColor: colors.badge,
-    borderRadius: radius.sm,
-    minWidth: 34,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
+  barra: {
+    marginTop: 6,
+  },
+  semChip: {
+    minWidth: 64,
     alignItems: 'center',
-    marginRight: spacing.md,
+    justifyContent: 'center',
+    paddingVertical: 5,
+    borderRadius: radius.pill,
+    backgroundColor: colors.cardStrong,
   },
-  badgeText: {
-    color: colors.badgeText,
-    fontWeight: '700',
+  semTexto: {
+    color: colors.onPrimaryMuted,
+    fontWeight: '800',
     fontSize: typography.body,
-  },
-  faltas: {
-    color: colors.onPrimary,
-    fontSize: typography.body,
-    fontWeight: '700',
-    minWidth: 24,
-    textAlign: 'center',
   },
 });

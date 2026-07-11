@@ -1,21 +1,45 @@
 // Container padrão das telas: fundo vermelho + espaçamento.
-// Por padrão é rolável (ScrollView); use scroll={false} para conteúdo fixo.
-import { ScrollView, StyleSheet, View } from 'react-native';
+// scroll={true} usa ScrollView; avoidKeyboard envolve em KeyboardAvoidingView.
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { colors, spacing } from '../theme/theme';
 
-export default function Screen({ children, scroll = true, contentStyle }) {
-  if (scroll) {
+export default function Screen({
+  children,
+  scroll = true,
+  contentStyle,
+  avoidKeyboard = false,
+}) {
+  const conteudo = scroll ? (
+    <ScrollView
+      style={styles.bg}
+      contentContainerStyle={[styles.content, contentStyle]}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
+      {children}
+    </ScrollView>
+  ) : (
+    <View style={[styles.bg, styles.content, contentStyle]}>{children}</View>
+  );
+
+  if (avoidKeyboard) {
     return (
-      <ScrollView
+      <KeyboardAvoidingView
         style={styles.bg}
-        contentContainerStyle={[styles.content, contentStyle]}
-        keyboardShouldPersistTaps="handled"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {children}
-      </ScrollView>
+        {conteudo}
+      </KeyboardAvoidingView>
     );
   }
-  return <View style={[styles.bg, styles.content, contentStyle]}>{children}</View>;
+
+  return conteudo;
 }
 
 const styles = StyleSheet.create({
